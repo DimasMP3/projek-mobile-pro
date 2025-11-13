@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/movie_model.dart';
+import 'universal_image.dart' as uiw;
 import '../../utils/format_currency.dart';
 
 class MovieCard extends StatelessWidget {
@@ -24,10 +25,50 @@ class MovieCard extends StatelessWidget {
             AspectRatio(
               aspectRatio: 3 / 4,
               child: ClipRRect(
-                borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(14),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    uiw.UniversalImage(path: movie.poster, fit: BoxFit.cover),
+                    // gradient bottom overlay
+                    Positioned.fill(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              const Color(0xFF0B0F1A).withValues(alpha: .7),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      left: 8,
+                      right: 8,
+                      bottom: 8,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              movie.genre,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(color: Colors.white70, fontSize: 11),
+                            ),
+                          ),
+                          Text(
+                            '${movie.durationMin}m',
+                            style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                    )
+                  ],
                 ),
-                child: Image.asset(movie.poster, fit: BoxFit.cover),
               ),
             ),
             Padding(

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../data/models/movie_model.dart';
+import 'universal_image.dart' as uiw;
 import '../../utils/format_currency.dart';
 
 class MovieListTile extends StatelessWidget {
@@ -22,7 +23,7 @@ class MovieListTile extends StatelessWidget {
             borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
             child: AspectRatio(
               aspectRatio: 3 / 4,
-              child: Image.asset(movie.poster, fit: BoxFit.cover),
+              child: uiw.UniversalImage(path: movie.poster, fit: BoxFit.cover),
             ),
           ),
 

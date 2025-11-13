@@ -1,11 +1,24 @@
 import 'package:flutter/material.dart';
 import '../../config/app_routes.dart';
+import '../../data/repositories/movie_repository.dart';
+import '../../data/models/movie_model.dart';
+import '../../utils/format_currency.dart';
+import '../../utils/date_formatter.dart';
 
 class PaymentPage extends StatelessWidget {
   const PaymentPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final args = ModalRoute.of(context)?.settings.arguments;
+    final map = (args is Map) ? args : <String, dynamic>{};
+    final movieId = map['movieId'] as String?;
+    final cinema = map['cinema'] as String?;
+    final DateTime? time = map['time'] as DateTime?;
+    final seats = (map['seats'] as List?)?.cast<String>() ?? <String>[];
+
+    final repo = MovieRepository();
+
     return Scaffold(
       backgroundColor: const Color(0xFF0B0F1A),
       appBar: AppBar(
@@ -17,7 +30,7 @@ class PaymentPage extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          // Ringkasan pesanan (placeholder sederhana)
+          // Ringkasan pesanan
           Container(
             decoration: BoxDecoration(
               color: const Color(0xFF151B2A),
@@ -28,18 +41,34 @@ class PaymentPage extends StatelessWidget {
               style: const TextStyle(color: Colors.white),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text(
+                children: [
+                  const Text(
                     'Ringkasan',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800),
                   ),
-                  SizedBox(height: 10),
-                  _RowText('Film', '—'),
-                  _RowText('Bioskop', '—'),
-                  _RowText('Jadwal', '—'),
-                  _RowText('Kursi', '—'),
-                  Divider(color: Colors.white24, height: 20),
-                  _RowText('Total', 'Rp0', isBold: true),
+                  const SizedBox(height: 10),
+                  if (movieId == null)
+                    const _RowText('Film', '-')
+                  else
+                    FutureBuilder<Movie?>(
+                      future: repo.getMovie(movieId),
+                      builder: (context, snap) {
+                        final movie = snap.data;
+                        final harga = movie?.price ?? 0;
+                        final total = harga * seats.length;
+                        return Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _RowText('Film', movie?.title ?? '-'),
+                            _RowText('Bioskop', cinema ?? '-'),
+                            _RowText('Jadwal', time == null ? '-' : formatShowTime(time)),
+                            _RowText('Kursi', seats.isEmpty ? '-' : seats.join(', ')),
+                            const Divider(color: Colors.white24, height: 20),
+                            _RowText('Total', toRupiah(total), isBold: true),
+                          ],
+                        );
+                      },
+                    ),
                 ],
               ),
             ),
@@ -126,7 +155,7 @@ class _RowText extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final style = TextStyle(
-      color: Colors.white.withOpacity(.9),
+      color: Colors.white.withValues(alpha: .9),
       fontWeight: isBold ? FontWeight.w800 : FontWeight.w600,
     );
     return Padding(

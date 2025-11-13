@@ -1,10 +1,13 @@
 import 'package:flutter/material.dart';
 import '../widgets/seat_widget.dart';
+import '../../utils/date_formatter.dart';
 import '../../config/app_routes.dart';
 
 class SeatSelectionPage extends StatefulWidget {
   final String movieId;
-  const SeatSelectionPage({super.key, required this.movieId});
+  final DateTime? time;
+  final String? cinema;
+  const SeatSelectionPage({super.key, required this.movieId, this.time, this.cinema});
 
   @override
   State<SeatSelectionPage> createState() => _SeatSelectionPageState();
@@ -20,9 +23,41 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
     final cols = List.generate(10, (i) => i + 1);
 
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Seats')),
+      appBar: AppBar(
+        title: const Text('Select Seats'),
+        backgroundColor: const Color(0xFF0B0F1A),
+        elevation: 0,
+      ),
       body: Column(
         children: [
+          if (widget.time != null || widget.cinema != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF151B2A),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(Icons.event_seat, color: Colors.white70, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        [
+                          if (widget.cinema != null) widget.cinema,
+                          if (widget.time != null) formatShowTime(widget.time!),
+                        ].whereType<String>().join('  •  '),
+                        style: const TextStyle(color: Colors.white70),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           const SizedBox(height: 12),
           const Text('Screen', style: TextStyle(color: Colors.white70)),
           const SizedBox(height: 8),
@@ -53,10 +88,11 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
                         selected: isSel,
                         onTap: () {
                           setState(() {
-                            if (isSel)
+                            if (isSel) {
                               selected.remove(code);
-                            else
+                            } else {
                               selected.add(code);
+                            }
                           });
                         },
                       );
@@ -72,10 +108,15 @@ class _SeatSelectionPageState extends State<SeatSelectionPage> {
               onPressed: selected.isEmpty
                   ? null
                   : () => Navigator.pushNamed(
-                      context,
-                      AppRoutes.payment,
-                      arguments: selected.toList(),
-                    ),
+                        context,
+                        AppRoutes.payment,
+                        arguments: {
+                          'movieId': widget.movieId,
+                          'time': widget.time,
+                          'cinema': widget.cinema,
+                          'seats': selected.toList(),
+                        },
+                      ),
               child: Text(
                 'Pay (${selected.length} seat${selected.length > 1 ? 's' : ''})',
               ),

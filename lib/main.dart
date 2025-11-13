@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
 import 'config/app_routes.dart';
 import 'config/theme.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 
-void main() {
+Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await dotenv.load(fileName: "assets/env/.env");
   runApp(const TicketApp());
 }
 
@@ -27,8 +29,9 @@ class TicketApp extends StatelessWidget {
 
       // (Opsional) transisi default untuk Android/iOS
       builder: (context, child) {
+        final mq = MediaQuery.of(context);
         return MediaQuery(
-          data: MediaQuery.of(context).copyWith(textScaleFactor: 1.0),
+          data: mq.copyWith(textScaler: const TextScaler.linear(1.0)),
           child: child!,
         );
       },

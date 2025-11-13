@@ -3,6 +3,7 @@ import '../../config/app_routes.dart';
 import '../../data/repositories/movie_repository.dart';
 import '../../data/models/movie_model.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../widgets/universal_image.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -79,7 +80,7 @@ class _HomePageState extends State<HomePage> {
                               hintText: 'Cari di SanTix',
                               prefixIcon: const Icon(Icons.search),
                               filled: true,
-                              fillColor: Colors.white.withOpacity(0.08),
+                              fillColor: Colors.white.withValues(alpha: 0.08),
                               border: OutlineInputBorder(
                                 borderRadius: BorderRadius.circular(30),
                                 borderSide: BorderSide.none,
@@ -89,7 +90,7 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                             onTap: () {
-                              // TODO: buka halaman pencarian
+                              Navigator.pushNamed(context, AppRoutes.search);
                             },
                           ),
                         ),
@@ -97,8 +98,6 @@ class _HomePageState extends State<HomePage> {
                         IconButton(
                           onPressed: () =>
                               Navigator.pushNamed(context, AppRoutes.account),
-
-                          // TODO: buka profil
                           icon: const Icon(Icons.account_circle_rounded),
                           color: Colors.white70,
                         ),
@@ -128,18 +127,21 @@ class _HomePageState extends State<HomePage> {
                           child: Stack(
                             fit: StackFit.expand,
                             children: [
-                              Image.asset(
-                                'assets/images/carousel-${i + 1}.jpg',
-                                fit: BoxFit.cover,
-                              ),
+                              if (movies.isNotEmpty)
+                                UniversalImage(
+                                  path: movies[i % movies.length].poster,
+                                  fit: BoxFit.cover,
+                                )
+                              else
+                                Container(color: const Color(0xFF151B2A)),
                               Container(
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     begin: Alignment.topCenter,
                                     end: Alignment.bottomCenter,
                                     colors: [
-                                      Colors.black.withOpacity(.15),
-                                      Colors.black.withOpacity(.45),
+                                      Colors.black.withValues(alpha: .15),
+                                      Colors.black.withValues(alpha: .45),
                                     ],
                                   ),
                                 ),
@@ -189,13 +191,13 @@ class _HomePageState extends State<HomePage> {
                             context,
                             AppRoutes.nowShowing,
                           ),
-                          child: const Padding(
+                            child: const Padding(
                             padding: EdgeInsets.symmetric(
                               horizontal: 6,
                               vertical: 4,
                             ),
                             child: Text(
-                              'Semua ›',
+                              'Semua',
                               style: TextStyle(color: Colors.white70),
                             ),
                           ),
@@ -241,22 +243,17 @@ class _HomePageState extends State<HomePage> {
                                       child: Stack(
                                         children: [
                                           Positioned.fill(
-                                            child: Image.asset(
-                                              m.poster,
+                                            child: UniversalImage(
+                                              path: m.poster,
                                               fit: BoxFit.cover,
-                                              errorBuilder: (_, __, ___) =>
-                                                  Container(
-                                                    color: const Color(
-                                                      0xFF151B2A,
-                                                    ),
-                                                    alignment: Alignment.center,
-                                                    child: const Text(
-                                                      'Poster tidak ditemukan',
-                                                      style: TextStyle(
-                                                        color: Colors.white54,
-                                                      ),
-                                                    ),
-                                                  ),
+                                              errorBuilder: (_, __, ___) => Container(
+                                                color: const Color(0xFF151B2A),
+                                                alignment: Alignment.center,
+                                                child: const Text(
+                                                  'Gambar tidak tersedia',
+                                                  style: TextStyle(color: Colors.white),
+                                                ),
+                                              ),
                                             ),
                                           ),
                                           Positioned.fill(
@@ -267,9 +264,7 @@ class _HomePageState extends State<HomePage> {
                                                   end: Alignment.bottomCenter,
                                                   colors: [
                                                     Colors.transparent,
-                                                    Colors.black.withOpacity(
-                                                      0.6,
-                                                    ),
+                                                    Colors.black.withValues(alpha: 0.6),
                                                   ],
                                                 ),
                                               ),
@@ -283,29 +278,20 @@ class _HomePageState extends State<HomePage> {
                                               width: double.infinity,
                                               child: ElevatedButton(
                                                 style: ElevatedButton.styleFrom(
-                                                  backgroundColor: const Color(
-                                                    0xFF2563EB,
-                                                  ),
+                                                  backgroundColor: const Color(0xFF2563EB),
                                                   shape: RoundedRectangleBorder(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                          12,
-                                                        ),
+                                                    borderRadius: BorderRadius.circular(12),
                                                   ),
                                                   elevation: 0,
                                                 ),
-                                                onPressed: () =>
-                                                    Navigator.pushNamed(
-                                                      context,
-                                                      AppRoutes.detail,
-                                                      arguments: m.id,
-                                                    ),
+                                                onPressed: () => Navigator.pushNamed(
+                                                  context,
+                                                  AppRoutes.detail,
+                                                  arguments: m.id,
+                                                ),
                                                 child: const Text(
-                                                  'BELI TIKET',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Colors.white,
-                                                  ),
+                                                  'Pesan Tiket',
+                                                  style: TextStyle(color: Colors.white),
                                                 ),
                                               ),
                                             ),
@@ -364,7 +350,7 @@ class _HomePageState extends State<HomePage> {
                                       'Pesan tiket presale film ini, supaya kamu bisa nonton film ini lebih awal! 🚀',
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(0.8),
+                                        color: Colors.white.withValues(alpha: 0.8),
                                         fontSize: 13,
                                       ),
                                     ),
@@ -434,10 +420,7 @@ class _FunSection extends StatelessWidget {
                     color: const Color(0xFF2A3452),
                     borderRadius: BorderRadius.circular(24),
                   ),
-                  child: const Text(
-                    'Semua  ›',
-                    style: TextStyle(color: Colors.white),
-                  ),
+                  child: const Text('Semua', style: TextStyle(color: Colors.white)),
                 ),
               ),
             ],
@@ -453,148 +436,14 @@ class _FunSection extends StatelessWidget {
         ),
         const SizedBox(height: 12),
 
-        // List card horizontal
-        SizedBox(
-          height: 270, // cukup untuk gambar 16:9 + judul + bar harga
-          child: ListView.separated(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            scrollDirection: Axis.horizontal,
-            physics: const BouncingScrollPhysics(),
-            itemCount: _funItems.length,
-            separatorBuilder: (_, __) => const SizedBox(width: 14),
-            itemBuilder: (context, i) {
-              final item = _funItems[i]; // <-- ambil by index (agar beda-beda)
-              return SizedBox(
-                width: 300,
-                height: 270,
-                child: _FunCard(item: item),
-              );
-            },
-          ),
-        ),
+        // Removed local image-based content (Fun Tix) to rely solely on DB data
+        const SizedBox.shrink(),
       ],
     );
   }
 }
 
-class _FunCard extends StatelessWidget {
-  const _FunCard({required this.item});
-  final _FunItem item;
+// Fun Tix section removed to ensure all dynamic content comes from DB
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 300,
-      decoration: BoxDecoration(
-        color: const Color(0xCC18203A), // transparent dark blue
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x22000000),
-            blurRadius: 14,
-            offset: Offset(0, 6),
-          ),
-        ],
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // gambar 16:9
-          ClipRRect(
-            borderRadius: const BorderRadius.only(
-              topLeft: Radius.circular(18),
-              topRight: Radius.circular(18),
-            ),
-            child: AspectRatio(
-              aspectRatio: 16 / 9,
-              child: Image.asset(
-                item.imagePath,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => Container(
-                  color: const Color(0xFFE9EDF5),
-                  alignment: Alignment.center,
-                  child: const Icon(Icons.image_not_supported, size: 36),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 10),
 
-          // judul
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            child: Text(
-              item.title,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w800,
-                fontSize: 16,
-              ),
-            ),
-          ),
 
-          const Spacer(), // dorong bar harga ke bawah
-          // "Mulai dari" + harga
-          Padding(
-            padding: const EdgeInsets.fromLTRB(14, 0, 14, 14),
-            child: Row(
-              children: [
-                const Text(
-                  'Mulai dari',
-                  style: TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const Spacer(),
-                Text(
-                  _idr(item.price), // <-- fungsi formatter tersedia di bawah
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ===== Data & util =====
-class _FunItem {
-  final String imagePath;
-  final String title;
-  final int price;
-  const _FunItem(this.imagePath, this.title, this.price);
-}
-
-final List<_FunItem> _funItems = const [
-  _FunItem('assets/images/Fun-Tix-1.jpg', 'Funworld Cinere Mall', 200000),
-  _FunItem('assets/images/Fun-Tix-2.jpg', 'Timezone Kota Kasablanka', 185000),
-  _FunItem('assets/images/Fun-Tix-3.jpg', 'Kidzilla Summarecon', 150000),
-  _FunItem('assets/images/Fun-Tix-4.jpg', 'Playtopia Grand Indonesia', 175000),
-  _FunItem(
-    'assets/images/Fun-Tix-5.jpg',
-    'Playtopia The Park Sawangan',
-    175000,
-  ),
-  _FunItem('assets/images/Fun-Tix-6.jpg', 'Playtopia Ramayana Parung', 175000),
-];
-
-String _idr(int n) {
-  // format Rupiah sederhana: Rp200.000
-  final s = n.toString();
-  final b = StringBuffer();
-  for (int i = 0; i < s.length; i++) {
-    final rev = s.length - i;
-    b.write(s[i]);
-    if (rev > 1 && rev % 3 == 1) b.write('.');
-  }
-  return 'Rp${b.toString()}';
-}

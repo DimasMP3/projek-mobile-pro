@@ -1,12 +1,17 @@
 import 'package:flutter/material.dart';
 import '../../config/app_routes.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../../services/session.dart';
+import '../../services/auth_service.dart';
 
 class AccountPage extends StatelessWidget {
   const AccountPage({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final name = Session.name ?? 'Guest';
+    final email = Session.email ?? '-';
+
     return Scaffold(
       backgroundColor: Colors.white,
       bottomNavigationBar: AppBottomNav(
@@ -67,8 +72,8 @@ class AccountPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Nouval',
+                Text(
+                  name,
                   style: TextStyle(
                     fontSize: 20,
                     fontWeight: FontWeight.w800,
@@ -76,10 +81,7 @@ class AccountPage extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                const Text(
-                  '+62857 1234 5678',
-                  style: TextStyle(color: Colors.black54),
-                ),
+                Text(email, style: const TextStyle(color: Colors.black54)),
                 const SizedBox(height: 12),
                 // VIP pill
                 Container(
@@ -118,7 +120,7 @@ class AccountPage extends StatelessWidget {
               borderRadius: BorderRadius.circular(14),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.grey.withOpacity(0.15),
+                  color: Colors.grey.withValues(alpha: 0.15),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -155,18 +157,37 @@ class AccountPage extends StatelessWidget {
             title: 'Konten Yang Disukai',
             onTap: () {},
           ),
-          _MenuTile(
-            icon: Icons.campaign_outlined,
-            title: 'Bagikan TIX ID & Dapatkan Koin!',
-            trailing: const Text(
-              'KDHGKT',
-              style: TextStyle(
-                color: Colors.black54,
-                fontWeight: FontWeight.bold,
-              ),
+        _MenuTile(
+          icon: Icons.campaign_outlined,
+          title: 'Bagikan TIX ID & Dapatkan Koin!',
+          trailing: const Text(
+            'KDHGKT',
+            style: TextStyle(
+              color: Colors.black54,
+              fontWeight: FontWeight.bold,
             ),
-            onTap: () {},
           ),
+          onTap: () {},
+        ),
+        const SizedBox(height: 24),
+        SizedBox(
+          height: 48,
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: const Color(0xFF2563EB),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              elevation: 0,
+            ),
+            onPressed: () async {
+              await AuthService.logout();
+              Session.clear();
+              if (context.mounted) {
+                Navigator.pushNamedAndRemoveUntil(context, AppRoutes.login, (r) => false);
+              }
+            },
+            child: const Text('Logout'),
+          ),
+        ),
         ],
       ),
     );

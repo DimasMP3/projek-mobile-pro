@@ -25,8 +25,11 @@ class ResetPasswordPage extends StatelessWidget {
             const SizedBox(height: 16),
             ElevatedButton(
               onPressed: () {
-                // TODO: kirim OTP / link reset
-                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Instruksi reset akan dikirim ke nomor ini.'),
+                  ),
+                );
               },
               child: const Text('Kirim Instruksi Reset'),
             ),

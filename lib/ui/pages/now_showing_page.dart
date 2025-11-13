@@ -2,14 +2,27 @@ import 'package:flutter/material.dart';
 import '../../data/repositories/movie_repository.dart';
 import '../../data/models/movie_model.dart';
 import '../../config/app_routes.dart';
+import '../widgets/universal_image.dart' as uiw;
 
-class NowShowingPage extends StatelessWidget {
+class NowShowingPage extends StatefulWidget {
   const NowShowingPage({super.key});
 
   @override
-  Widget build(BuildContext context) {
-    final repo = MovieRepository();
+  State<NowShowingPage> createState() => _NowShowingPageState();
+}
 
+class _NowShowingPageState extends State<NowShowingPage> {
+  final repo = MovieRepository();
+  late Future<List<Movie>> _future;
+
+  @override
+  void initState() {
+    super.initState();
+    _future = repo.fetchNowShowing();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0B0F1A),
       appBar: AppBar(
@@ -18,7 +31,7 @@ class NowShowingPage extends StatelessWidget {
         title: const Text('Film Bioskop'),
       ),
       body: FutureBuilder<List<Movie>>(
-        future: repo.fetchNowShowing(),
+        future: _future,
         builder: (context, snap) {
           if (snap.connectionState != ConnectionState.done) {
             return const Center(child: CircularProgressIndicator());
@@ -34,7 +47,15 @@ class NowShowingPage extends StatelessWidget {
             );
           }
 
-          return CustomScrollView(
+          return RefreshIndicator(
+            onRefresh: () async {
+              setState(() {
+                _future = repo.fetchNowShowing();
+              });
+              await _future;
+            },
+            child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
@@ -78,7 +99,7 @@ class NowShowingPage extends StatelessWidget {
                 ),
               ),
             ],
-          );
+          ));
         },
       ),
     );
@@ -104,19 +125,7 @@ class _MovieGridCard extends StatelessWidget {
               child: Stack(
                 children: [
                   Positioned.fill(
-                    child: Image.asset(
-                      movie.poster,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => Container(
-                        color: const Color(0xFF151B2A),
-                        alignment: Alignment.center,
-                        child: const Text(
-                          'Poster\nunavailable',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(color: Colors.white54, fontSize: 12),
-                        ),
-                      ),
-                    ),
+                    child: uiw.UniversalImage(path: movie.poster, fit: BoxFit.cover),
                   ),
                   Positioned(
                     top: 8,

@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import '../widgets/app_bottom_nav.dart';
+import '../../data/repositories/fun_repository.dart';
+import '../../data/models/fun_item_model.dart';
+import '../widgets/universal_image.dart' as uiw;
 
 class FunPage extends StatelessWidget {
   const FunPage({super.key});
@@ -24,64 +27,43 @@ class FunPage extends StatelessWidget {
           Navigator.pop(context);
         },
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
-          Text(
-            'Daftar Aktivitas TIX Fun',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          SizedBox(height: 12),
-          _FunCard(
-            title: 'Funworld Cinere Mall',
-            price: 'Rp200.000',
-            image: 'assets/images/Fun-Tix-1.jpg',
-          ),
-          _FunCard(
-            title: 'Timezone Kota Kasablanka',
-            price: 'Rp185.000',
-            image: 'assets/images/Fun-Tix-2.jpg',
-          ),
-          _FunCard(
-            title: 'Playtopia Grand Indonesia',
-            price: 'Rp175.000',
-            image: 'assets/images/Fun-Tix-3.jpg',
-          ),
-          _FunCard(
-            title: 'Playtopia Grand Indonesia',
-            price: 'Rp175.000',
-            image: 'assets/images/Fun-Tix-4.jpg',
-          ),
-          _FunCard(
-            title: 'Playtopia Grand Indonesia',
-            price: 'Rp175.000',
-            image: 'assets/images/Fun-Tix-5.jpg',
-          ),
-          _FunCard(
-            title: 'Playtopia Grand Indonesia',
-            price: 'Rp175.000',
-            image: 'assets/images/Fun-Tix-6.jpg',
-          ),
-        ],
-      ),
+      body: _FunList(),
     );
   }
 }
 
-class _FunCard extends StatelessWidget {
-  final String title;
-  final String price;
-  final String image;
+class _FunList extends StatelessWidget {
+  _FunList();
 
-  const _FunCard({
-    required this.title,
-    required this.price,
-    required this.image,
-  });
+  final repo = FunRepository();
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<List<FunItem>>(
+      future: repo.fetchFunItems(),
+      builder: (context, snap) {
+        if (snap.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        final items = snap.data ?? const <FunItem>[];
+        if (items.isEmpty) {
+          return const Center(
+            child: Text('Belum ada item TIX Fun', style: TextStyle(color: Colors.white70)),
+          );
+        }
+        return ListView.builder(
+          padding: const EdgeInsets.all(16),
+          itemCount: items.length,
+          itemBuilder: (context, i) => _FunRemoteCard(item: items[i]),
+        );
+      },
+    );
+  }
+}
+
+class _FunRemoteCard extends StatelessWidget {
+  const _FunRemoteCard({required this.item});
+  final FunItem item;
 
   @override
   Widget build(BuildContext context) {
@@ -99,11 +81,12 @@ class _FunCard extends StatelessWidget {
               topLeft: Radius.circular(18),
               topRight: Radius.circular(18),
             ),
-            child: Image.asset(
-              image,
-              fit: BoxFit.cover,
-              width: double.infinity,
-              height: 180,
+            child: AspectRatio(
+              aspectRatio: 16/9,
+              child: uiw.UniversalImage(
+                path: item.imageUrl ?? '',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
           Padding(
@@ -112,22 +95,27 @@ class _FunCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Expanded(
-                  child: Text(
-                    title,
-                    style: const TextStyle(
-                      color: Color.fromARGB(255, 255, 255, 255),
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        item.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 16,
+                        ),
+                      ),
+                      if ((item.subtitle ?? '').isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 4),
+                          child: Text(item.subtitle!, style: const TextStyle(color: Colors.white70)),
+                        ),
+                    ],
                   ),
                 ),
-                Text(
-                  price,
-                  style: const TextStyle(
-                    color: Color.fromARGB(255, 255, 255, 255),
-                    fontWeight: FontWeight.w900,
-                  ),
-                ),
+                if ((item.linkUrl ?? '').isNotEmpty)
+                  const Icon(Icons.chevron_right, color: Colors.white70),
               ],
             ),
           ),

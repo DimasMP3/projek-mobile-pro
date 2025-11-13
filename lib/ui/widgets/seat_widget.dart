@@ -15,12 +15,13 @@ class SeatWidget extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color bg;
-    if (taken)
+    if (taken) {
       bg = accentRed;
-    else if (selected)
+    } else if (selected) {
       bg = primary;
-    else
+    } else {
       bg = const Color(0xFF1E2535);
+    }
 
     return GestureDetector(
       onTap: taken ? null : onTap,

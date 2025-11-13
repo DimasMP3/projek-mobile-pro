@@ -207,7 +207,7 @@ class _CinemasPageState extends State<CinemasPage> {
                         hintText: 'Cari di SanTix',
                         prefixIcon: const Icon(Icons.search),
                         filled: true,
-                        fillColor: Colors.white.withOpacity(0.08),
+                        fillColor: Colors.white.withValues(alpha: 0.08),
                         border: OutlineInputBorder(
                           borderRadius: BorderRadius.circular(30),
                           borderSide: BorderSide.none,
@@ -243,7 +243,7 @@ class _CinemasPageState extends State<CinemasPage> {
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Row(
@@ -293,7 +293,7 @@ class _CinemasPageState extends State<CinemasPage> {
                 padding: const EdgeInsets.only(top: 6, bottom: 12),
                 itemCount: items.length,
                 separatorBuilder: (_, __) => Divider(
-                  color: Colors.white.withOpacity(0.06),
+                  color: Colors.white.withValues(alpha: 0.06),
                   height: 1,
                   thickness: 1,
                 ),
@@ -318,7 +318,7 @@ class _CinemasPageState extends State<CinemasPage> {
                         children: [
                           Icon(
                             Icons.star_border_rounded,
-                            color: Colors.white.withOpacity(0.75),
+                            color: Colors.white.withValues(alpha: 0.75),
                           ),
                           const SizedBox(width: 14),
                           Expanded(
@@ -333,7 +333,7 @@ class _CinemasPageState extends State<CinemasPage> {
                           ),
                           Icon(
                             Icons.chevron_right_rounded,
-                            color: Colors.white.withOpacity(0.6),
+                            color: Colors.white.withValues(alpha: 0.6),
                           ),
                         ],
                       ),

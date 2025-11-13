@@ -14,6 +14,7 @@ class _SplashPageState extends State<SplashPage> {
     super.initState();
     // Navigasi otomatis ke IntroPage setelah 3 detik
     Future.delayed(const Duration(seconds: 3), () {
+      if (!mounted) return;
       Navigator.pushReplacementNamed(context, AppRoutes.intro);
     });
   }

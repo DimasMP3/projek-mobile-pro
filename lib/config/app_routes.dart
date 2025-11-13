@@ -12,6 +12,7 @@ import '../ui/pages/seat_selection_page.dart';
 import '../ui/pages/payment_page.dart';
 import '../ui/pages/ticket_page.dart';
 import '../ui/pages/now_showing_page.dart';
+import '../ui/pages/search_page.dart';
 import '../ui/pages/fun_page.dart';
 import '../ui/pages/cinemas_page.dart';
 import '../ui/pages/account_page.dart';
@@ -28,6 +29,7 @@ class AppRoutes {
   static const payment = '/payment';
   static const ticket = '/ticket';
   static const nowShowing = '/now-showing';
+  static const search = '/search';
   static const fun = '/fun';
   static const cinemas = '/cinemas';
   static const account = '/account';
@@ -49,7 +51,18 @@ class AppRoutes {
       case detail:
         return _fade(MovieDetailPage(movieId: s.arguments as String));
       case seats:
-        return _fade(SeatSelectionPage(movieId: s.arguments as String));
+        final args = s.arguments;
+        if (args is Map) {
+          return _fade(
+            SeatSelectionPage(
+              movieId: args['movieId'] as String,
+              time: args['time'] as DateTime?,
+              cinema: args['cinema'] as String?,
+            ),
+          );
+        } else {
+          return _fade(SeatSelectionPage(movieId: args as String));
+        }
       case payment:
         return _fade(const PaymentPage());
 
@@ -59,6 +72,8 @@ class AppRoutes {
 
       case nowShowing:
         return _fade(const NowShowingPage());
+      case search:
+        return _fade(const SearchPage());
       case fun:
         return _fade(const FunPage());
       case cinemas:
