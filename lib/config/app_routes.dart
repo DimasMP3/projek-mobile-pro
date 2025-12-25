@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 // === Import semua halaman yang digunakan ===
 import '../ui/pages/splash_page.dart';
+import '../ui/pages/onboarding_page.dart';
 import '../ui/pages/intro_page.dart';
 import '../ui/pages/login_page.dart';
 import '../ui/pages/register_page.dart';
@@ -19,6 +20,7 @@ import '../ui/pages/account_page.dart';
 
 class AppRoutes {
   static const splash = '/';
+  static const onboarding = '/onboarding';
   static const intro = '/intro';
   static const login = '/login';
   static const register = '/register';
@@ -38,6 +40,8 @@ class AppRoutes {
     switch (s.name) {
       case splash:
         return _fade(const SplashPage());
+      case onboarding:
+        return _fade(const OnboardingPage());
       case intro:
         return _fade(const IntroPage());
       case login:
@@ -65,11 +69,8 @@ class AppRoutes {
         }
       case payment:
         return _fade(const PaymentPage());
-
-      // ✅ versi mula: tanpa argumen apa pun
       case ticket:
         return _fade(const TicketPage());
-
       case nowShowing:
         return _fade(const NowShowingPage());
       case search:
