@@ -26,7 +26,6 @@ class _SeatWidgetState extends State<SeatWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
-  bool _isPressed = false;
 
   @override
   void initState() {
@@ -76,20 +75,17 @@ class _SeatWidgetState extends State<SeatWidget>
       onTapDown: widget.taken
           ? null
           : (_) {
-              setState(() => _isPressed = true);
               _controller.forward();
             },
       onTapUp: widget.taken
           ? null
           : (_) {
-              setState(() => _isPressed = false);
               _controller.reverse();
               widget.onTap?.call();
             },
       onTapCancel: widget.taken
           ? null
           : () {
-              setState(() => _isPressed = false);
               _controller.reverse();
             },
       child: AnimatedBuilder(

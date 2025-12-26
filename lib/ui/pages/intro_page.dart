@@ -74,12 +74,16 @@ class _IntroPageState extends State<IntroPage> with TickerProviderStateMixin {
       backgroundColor: app_colors.bg,
       body: Stack(
         children: [
-          // Background with cinema image
+          // Background with premium cinema lobby image
           Positioned.fill(
-            child: Image.asset(
-              'assets/images/cinema-bgk.jpg',
+            child: Image.network(
+              'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?q=80&w=1600&auto=format&fit=crop',
               fit: BoxFit.cover,
-              alignment: Alignment.topCenter,
+              alignment: Alignment.center,
+              loadingBuilder: (context, child, loadingProgress) {
+                if (loadingProgress == null) return child;
+                return Container(color: app_colors.bg);
+              },
             ),
           ),
 

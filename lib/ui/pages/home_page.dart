@@ -256,9 +256,11 @@ class _HeroBanner extends StatelessWidget {
       scale: scale,
       child: SizedBox(
         height: 500,
-        child: Stack(
-          fit: StackFit.expand,
-          children: [
+        child: ClipRect(
+          child: Stack(
+            fit: StackFit.expand,
+            clipBehavior: Clip.hardEdge,
+            children: [
             // Background image with parallax
             Transform.translate(
               offset: Offset(0, scrollOffset * 0.3),
@@ -297,16 +299,18 @@ class _HeroBanner extends StatelessWidget {
                   children: [
                     // Movie title
                     Text(
-                      movie.title,
+                      movie.title.toUpperCase(),
                       style: const TextStyle(
-                        fontSize: 28,
+                        fontSize: 32,
                         fontWeight: FontWeight.w900,
                         color: Colors.white,
-                        height: 1.1,
+                        height: 1.0,
+                        letterSpacing: -0.5,
                         shadows: [
                           Shadow(
-                            color: Colors.black54,
-                            blurRadius: 10,
+                            color: Colors.black,
+                            blurRadius: 15,
+                            offset: Offset(0, 4),
                           ),
                         ],
                       ),
@@ -314,35 +318,37 @@ class _HeroBanner extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: 16),
 
-                    // Tags
+                    // Metadata Row
                     Row(
                       children: [
-                        _Tag(label: 'TOP 10', color: app_colors.accentRed),
-                        const SizedBox(width: 8),
-                        _Tag(label: 'Film #1 Hari Ini', isOutlined: true),
+                        _MetaTag(label: 'IMDb 8.5', icon: Icons.star_rounded),
+                        const SizedBox(width: 12),
+                        _MetaTag(label: '2h 15m', icon: Icons.access_time_rounded),
+                        const SizedBox(width: 12),
+                        _MetaTag(label: '13+', isOutlined: true),
                       ],
                     ),
 
-                    const SizedBox(height: 16),
+                    const SizedBox(height: 24),
 
                     // Buttons
                     Row(
                       children: [
                         Expanded(
                           child: _HeroButton(
-                            icon: Icons.play_arrow_rounded,
-                            label: 'Pesan Tiket',
+                            icon: Icons.confirmation_number_rounded,
+                            label: 'Beli Tiket',
                             isPrimary: true,
                             onTap: onPlay,
                           ),
                         ),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 12),
                         Expanded(
                           child: _HeroButton(
                             icon: Icons.info_outline_rounded,
-                            label: 'Info',
+                            label: 'Rincian',
                             onTap: onInfo,
                           ),
                         ),
@@ -353,6 +359,7 @@ class _HeroBanner extends StatelessWidget {
               ),
             ),
           ],
+          ),
         ),
       ),
     );
@@ -376,7 +383,7 @@ class _TopBar extends StatelessWidget {
     final double bgOpacity = (scrollOffset / 100).clamp(0.0, 1.0);
 
     return Transform.translate(
-      offset: Offset(0, -500 + MediaQuery.of(context).padding.top),
+      offset: const Offset(0, 0),
       child: Container(
         height: 60 + MediaQuery.of(context).padding.top,
         padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
@@ -653,36 +660,46 @@ class _RankedMovieCard extends StatelessWidget {
   }
 }
 
-/// Tag widget
-class _Tag extends StatelessWidget {
+/// Meta Tag for movie info
+class _MetaTag extends StatelessWidget {
   final String label;
-  final Color? color;
+  final IconData? icon;
   final bool isOutlined;
 
-  const _Tag({
+  const _MetaTag({
     required this.label,
-    this.color,
+    this.icon,
     this.isOutlined = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: isOutlined ? Colors.transparent : color,
-        borderRadius: BorderRadius.circular(4),
-        border: isOutlined
-            ? Border.all(color: Colors.white54, width: 1)
-            : null,
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: isOutlined ? Colors.white : Colors.white,
+        color: isOutlined ? Colors.transparent : app_colors.surfaceLight.withValues(alpha: 0.6),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: isOutlined ? app_colors.textTertiary : Colors.transparent,
+          width: 1,
         ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(icon, size: 14, color: app_colors.primary),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: isOutlined ? app_colors.textSecondary : Colors.white,
+            ),
+          ),
+        ],
       ),
     );
   }

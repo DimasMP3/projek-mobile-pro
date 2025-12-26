@@ -5,6 +5,7 @@ class Movie {
   final String genre;
   final int durationMin;
   final double price; // harga dasar
+  final String synopsis;
 
   Movie({
     required this.id,
@@ -13,5 +14,6 @@ class Movie {
     required this.genre,
     required this.durationMin,
     required this.price,
+    this.synopsis = '',
   });
 }

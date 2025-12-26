@@ -22,39 +22,39 @@ class _OnboardingPageState extends State<OnboardingPage>
 
   final List<OnboardingData> _pages = [
     OnboardingData(
-      icon: Icons.movie_filter_rounded,
+      imageUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?q=80&w=1000&auto=format&fit=crop',
       title: 'Selamat Datang\ndi SanTix',
-      subtitle: 'Aplikasi pemesanan tiket bioskop\nterbaik dengan pengalaman premium',
+      subtitle: 'Rasakan kemewahan menonton film\ndengan layanan premier terbaik',
       gradient: [
-        const Color(0xFFD4AF37),
-        const Color(0xFFB8962E),
+        const Color(0xFFC5A059),
+        const Color(0xFF8B6B3F),
       ],
     ),
     OnboardingData(
-      icon: Icons.confirmation_number_rounded,
+      imageUrl: 'https://images.unsplash.com/photo-1513106580091-1d82408b8cd6?q=80&w=1000&auto=format&fit=crop',
       title: 'Pesan Tiket\ndengan Mudah',
-      subtitle: 'Pilih film favorit, jadwal, dan kursi\ndengan beberapa ketukan saja',
+      subtitle: 'Pilih film favorit dan jadwal tayang\ndari ribuan bioskop terkemuka',
       gradient: [
-        const Color(0xFF6366F1),
-        const Color(0xFF4F46E5),
+        const Color(0xFF2C3E50),
+        const Color(0xFF000000),
       ],
     ),
     OnboardingData(
-      icon: Icons.event_seat_rounded,
-      title: 'Pilih Kursi\nFavoritmu',
-      subtitle: 'Lihat denah bioskop secara real-time\ndan pilih kursi terbaik untukmu',
+      imageUrl: 'https://images.unsplash.com/photo-1585647347384-2593bc35786b?q=80&w=1000&auto=format&fit=crop',
+      title: 'Pilih Kursi\nTerbaik',
+      subtitle: 'Rasakan kenyamanan menonton dengan\npilihan kursi premium terbaik kami',
       gradient: [
-        const Color(0xFF10B981),
-        const Color(0xFF059669),
+        const Color(0xFF8E44AD),
+        const Color(0xFF000000),
       ],
     ),
     OnboardingData(
-      icon: Icons.local_offer_rounded,
-      title: 'Promo & Diskon\nEksklusif',
-      subtitle: 'Dapatkan penawaran spesial dan\npromo menarik setiap harinya',
+      imageUrl: 'https://images.unsplash.com/photo-1594909122845-11baa439b7bf?q=80&w=1000&auto=format&fit=crop',
+      title: 'TIX Fun &\nPenawaran Menarik',
+      subtitle: 'Dapatkan berbagai promo eksklusif\ndan poin reward untuk setiap transaksi',
       gradient: [
-        const Color(0xFFF59E0B),
-        const Color(0xFFD97706),
+        const Color(0xFFC5A059),
+        const Color(0xFF8B6B3F),
       ],
     ),
   ];
@@ -241,14 +241,58 @@ class _OnboardingSlide extends StatelessWidget {
         children: [
           const Spacer(),
 
-          // Animated icon container
+          // Premium Realistic Image
           FadeTransition(
             opacity: fadeAnimation,
             child: SlideTransition(
               position: slideAnimation,
-              child: _AnimatedIconBox(
-                icon: data.icon,
-                gradient: data.gradient,
+              child: Container(
+                width: double.infinity,
+                height: 300,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(24),
+                  boxShadow: [
+                    BoxShadow(
+                      color: data.gradient[0].withValues(alpha: 0.1),
+                      blurRadius: 30,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: ClipRRect(
+                  borderRadius: BorderRadius.circular(24),
+                  child: Stack(
+                    children: [
+                      Image.network(
+                        data.imageUrl,
+                        fit: BoxFit.cover,
+                        width: double.infinity,
+                        height: double.infinity,
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            color: app_colors.surface,
+                            child: const Center(
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            ),
+                          );
+                        },
+                      ),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topCenter,
+                            end: Alignment.bottomCenter,
+                            colors: [
+                              Colors.transparent,
+                              app_colors.bg.withValues(alpha: 0.7),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
@@ -427,13 +471,13 @@ class _PageIndicator extends StatelessWidget {
 
 /// Data model for onboarding pages
 class OnboardingData {
-  final IconData icon;
+  final String imageUrl;
   final String title;
   final String subtitle;
   final List<Color> gradient;
 
   OnboardingData({
-    required this.icon,
+    required this.imageUrl,
     required this.title,
     required this.subtitle,
     required this.gradient,

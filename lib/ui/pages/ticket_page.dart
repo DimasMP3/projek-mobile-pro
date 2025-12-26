@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../config/app_routes.dart';
 
 class TicketPage extends StatelessWidget {
   const TicketPage({super.key});
@@ -10,6 +11,14 @@ class TicketPage extends StatelessWidget {
       appBar: AppBar(
         backgroundColor: const Color(0xFF0B0F1A),
         elevation: 0,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+          onPressed: () => Navigator.pushNamedAndRemoveUntil(
+            context,
+            AppRoutes.home,
+            (route) => false,
+          ),
+        ),
         title: const Text('Tiket Saya'),
         centerTitle: true,
       ),

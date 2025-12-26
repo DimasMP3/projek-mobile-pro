@@ -100,26 +100,52 @@ class _SplashPageState extends State<SplashPage> with TickerProviderStateMixin {
       backgroundColor: app_colors.bg,
       body: Stack(
         children: [
-          // Animated gradient background
-          AnimatedBuilder(
-            animation: _bgAnimation,
-            builder: (context, child) {
-              return Container(
-                decoration: BoxDecoration(
-                  gradient: RadialGradient(
-                    center: Alignment(
-                      0.3 * math.sin(_bgAnimation.value * math.pi),
-                      -0.3 + 0.2 * math.cos(_bgAnimation.value * math.pi),
+          // Background Image with Overlay
+          Positioned.fill(
+            child: Stack(
+              children: [
+                Image.asset(
+                  'assets/images/cinema-bgk.jpg',
+                  fit: BoxFit.cover,
+                  width: double.infinity,
+                  height: double.infinity,
+                ),
+                Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topCenter,
+                      end: Alignment.bottomCenter,
+                      colors: [
+                        app_colors.bg.withValues(alpha: 0.8),
+                        app_colors.bg.withValues(alpha: 0.5),
+                        app_colors.bg,
+                      ],
                     ),
-                    radius: 1.2,
-                    colors: [
-                      app_colors.primary.withValues(alpha: 0.08),
-                      app_colors.bg,
-                    ],
                   ),
                 ),
-              );
-            },
+                // Animated radial highlight
+                AnimatedBuilder(
+                  animation: _bgAnimation,
+                  builder: (context, child) {
+                    return Container(
+                      decoration: BoxDecoration(
+                        gradient: RadialGradient(
+                          center: Alignment(
+                            0.2 * math.sin(_bgAnimation.value * math.pi),
+                            -0.2 + 0.1 * math.cos(_bgAnimation.value * math.pi),
+                          ),
+                          radius: 1.5,
+                          colors: [
+                            app_colors.primary.withValues(alpha: 0.12),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+              ],
+            ),
           ),
 
           // Subtle particle effect overlay

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 
 import '../../config/app_routes.dart';
@@ -7,6 +8,7 @@ import '../../data/models/schedule_model.dart';
 import '../../utils/format_currency.dart';
 import '../../utils/date_formatter.dart';
 import '../widgets/universal_image.dart' as uiw;
+import '../styles/colors.dart' as app_colors;
 
 class MovieDetailPage extends StatefulWidget {
   final String movieId;
@@ -16,9 +18,15 @@ class MovieDetailPage extends StatefulWidget {
   State<MovieDetailPage> createState() => _MovieDetailPageState();
 }
 
-class _MovieDetailPageState extends State<MovieDetailPage> {
+class _MovieDetailPageState extends State<MovieDetailPage>
+    with SingleTickerProviderStateMixin {
   final repo = MovieRepository();
   int? _selectedIndex;
+  double _scrollOffset = 0;
+
+  late final ScrollController _scrollController;
+  late final AnimationController _fadeController;
+  late final Animation<double> _fadeAnimation;
 
   late final Future<List<Object?>> _future = Future.wait<Object?>([
     repo.getMovie(widget.movieId),
@@ -26,21 +34,47 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
   ]);
 
   @override
+  void initState() {
+    super.initState();
+    _scrollController = ScrollController()
+      ..addListener(() {
+        setState(() => _scrollOffset = _scrollController.offset);
+      });
+
+    _fadeController = AnimationController(
+      duration: const Duration(milliseconds: 800),
+      vsync: this,
+    );
+    _fadeAnimation = CurvedAnimation(
+      parent: _fadeController,
+      curve: Curves.easeOut,
+    );
+    _fadeController.forward();
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _fadeController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final width = MediaQuery.of(context).size.width;
-    // Poster ratio 2:3 => height = 1.5 * width to show full image
-    final headerHeight = width * 1.5;
+    final headerHeight = width * 1.4;
 
     return Scaffold(
-      backgroundColor: const Color(0xFF0B0F1A),
+      backgroundColor: app_colors.bg,
+      extendBodyBehindAppBar: true,
       body: FutureBuilder<List<Object?>>(
         future: _future,
         builder: (context, snapshot) {
           if (snapshot.connectionState != ConnectionState.done) {
-            return const Center(child: CircularProgressIndicator());
+            return _buildLoadingState();
           }
           if (!snapshot.hasData) {
-            return const Center(child: Text('No data', style: TextStyle(color: Colors.white70)));
+            return _buildErrorState('No data available');
           }
 
           final data = snapshot.data!;
@@ -48,209 +82,669 @@ class _MovieDetailPageState extends State<MovieDetailPage> {
           final List<Schedule> times = (data[1] as List<Schedule>);
 
           if (movie == null) {
-            return const Center(child: Text('Movie not found', style: TextStyle(color: Colors.white70)));
+            return _buildErrorState('Movie not found');
           }
 
-          return CustomScrollView(
-            slivers: [
-              SliverAppBar(
-                backgroundColor: const Color(0xFF0B0F1A),
-                surfaceTintColor: Colors.transparent,
-                expandedHeight: headerHeight,
-                pinned: true,
-                stretch: true,
-                title: Text(
-                  movie.title,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                flexibleSpace: FlexibleSpaceBar(
-                  background: Stack(
-                    fit: StackFit.expand,
-                    children: [
-                      // Fit width so the entire poster is visible without cropping
-                      uiw.UniversalImage(
-                        path: movie.poster,
-                        fit: BoxFit.fitWidth,
-                      ),
-                      Container(
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            begin: Alignment.topCenter,
-                            end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.black.withValues(alpha: 0.08),
-                              Colors.black.withValues(alpha: 0.55),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ],
+          return Stack(
+            children: [
+              // Main content
+              CustomScrollView(
+                controller: _scrollController,
+                slivers: [
+                  // Hero Banner
+                  SliverToBoxAdapter(
+                    child: _HeroBanner(
+                      movie: movie,
+                      height: headerHeight,
+                      scrollOffset: _scrollOffset,
+                    ),
                   ),
-                ),
-              ),
-              SliverToBoxAdapter(
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 100),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Info card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF121826),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              movie.title,
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 22,
-                                fontWeight: FontWeight.w900,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                Flexible(
-                                  child: Text(
-                                    movie.genre,
-                                    style: const TextStyle(color: Colors.white70),
-                                    overflow: TextOverflow.ellipsis,
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                const Text('\u2022', style: TextStyle(color: Colors.white38)),
-                                const SizedBox(width: 8),
-                                Text(
-                                  'Duration ${movie.durationMin} min',
-                                  style: const TextStyle(color: Colors.white70),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
 
-                      const SizedBox(height: 16),
-
-                      // Showtimes card
-                      Container(
-                        padding: const EdgeInsets.all(16),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF121826),
-                          borderRadius: BorderRadius.circular(16),
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            const Text(
-                              'Select Time',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.w800,
-                              ),
-                            ),
-                            const SizedBox(height: 12),
-                            if (times.isEmpty)
-                              const Text('No showtimes available', style: TextStyle(color: Colors.white54))
-                            else
-                              Wrap(
-                                spacing: 10,
-                                runSpacing: 10,
-                                children: [
-                                  for (int i = 0; i < times.length; i++)
-                                    ChoiceChip(
-                                      label: Text(
-                                        '${formatShowTime(times[i].time)}  \u2022  ${times[i].cinema}',
-                                      ),
-                                      labelStyle: TextStyle(
-                                        color: _selectedIndex == i ? Colors.white : Colors.white70,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                      selected: _selectedIndex == i,
-                                      selectedColor: const Color(0xFF2563EB),
-                                      backgroundColor: const Color(0xFF1A2234),
-                                      side: BorderSide(
-                                        color: _selectedIndex == i ? const Color(0xFF2563EB) : Colors.white24,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(24),
-                                      ),
-                                      onSelected: (_) => setState(() => _selectedIndex = i),
-                                    ),
-                                ],
-                              ),
-                          ],
-                        ),
+                  // Content
+                  SliverToBoxAdapter(
+                    child: FadeTransition(
+                      opacity: _fadeAnimation,
+                      child: _MovieContent(
+                        movie: movie,
+                        times: times,
+                        selectedIndex: _selectedIndex,
+                        onTimeSelected: (index) {
+                          setState(() => _selectedIndex = index);
+                        },
                       ),
-                    ],
+                    ),
                   ),
-                ),
+
+                  // Bottom spacing for CTA
+                  const SliverToBoxAdapter(
+                    child: SizedBox(height: 100),
+                  ),
+                ],
               ),
+
+              // Top bar
+              _buildTopBar(context, movie),
             ],
           );
         },
       ),
-      bottomNavigationBar: Builder(
-        builder: (context) {
-          return SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: FutureBuilder<List<Object?>>(
-                future: _future,
-                builder: (context, snapshot) {
-                  Movie? movie;
-                  List<Schedule> times = const [];
-                  if (snapshot.hasData) {
-                    final data = snapshot.data!;
-                    movie = data[0] as Movie?;
-                    times = data[1] as List<Schedule>;
+      bottomNavigationBar: _buildBottomCTA(),
+    );
+  }
+
+  Widget _buildLoadingState() {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          SizedBox(
+            width: 40,
+            height: 40,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              valueColor: AlwaysStoppedAnimation<Color>(app_colors.primary),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'Loading...',
+            style: TextStyle(color: app_colors.textSecondary),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildErrorState(String message) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.error_outline, size: 48, color: app_colors.textTertiary),
+          const SizedBox(height: 16),
+          Text(message, style: TextStyle(color: app_colors.textSecondary)),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTopBar(BuildContext context, Movie movie) {
+    final double opacity = (_scrollOffset / 200).clamp(0.0, 1.0);
+
+    return Positioned(
+      top: 0,
+      left: 0,
+      right: 0,
+      child: Container(
+        padding: EdgeInsets.only(top: MediaQuery.of(context).padding.top),
+        decoration: BoxDecoration(
+          color: app_colors.bg.withValues(alpha: opacity),
+        ),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          child: Row(
+            children: [
+              // Back button
+              _GlassIconButton(
+                icon: Icons.arrow_back_ios_new_rounded,
+                onTap: () => Navigator.pop(context),
+              ),
+              const Spacer(),
+              // Title (fades in as you scroll)
+              Opacity(
+                opacity: opacity,
+                child: Text(
+                  movie.title,
+                  style: TextStyle(
+                    color: app_colors.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const Spacer(),
+              // Share button
+              _GlassIconButton(
+                icon: Icons.share_rounded,
+                onTap: () {},
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildBottomCTA() {
+    return FutureBuilder<List<Object?>>(
+      future: _future,
+      builder: (context, snapshot) {
+        Movie? movie;
+        List<Schedule> times = const [];
+        if (snapshot.hasData) {
+          final data = snapshot.data!;
+          movie = data[0] as Movie?;
+          times = data[1] as List<Schedule>;
+        }
+        final enabled = _selectedIndex != null && movie != null;
+
+        return Container(
+          padding: EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            MediaQuery.of(context).padding.bottom + 12,
+          ),
+          decoration: BoxDecoration(
+            color: app_colors.bg,
+            border: Border(
+              top: BorderSide(color: app_colors.glassBorder, width: 1),
+            ),
+          ),
+          child: _PremiumButton(
+            label: movie == null
+                ? 'Beli Tiket'
+                : 'Beli Tiket  •  ${toRupiah(movie.price)}',
+            enabled: enabled,
+            onTap: enabled
+                ? () {
+                    final pick = times[_selectedIndex!];
+                    Navigator.pushNamed(
+                      context,
+                      AppRoutes.seats,
+                      arguments: {
+                        'movieId': movie!.id,
+                        'time': pick.time,
+                        'cinema': pick.cinema,
+                      },
+                    );
                   }
-                  final enabled = _selectedIndex != null && movie != null;
-                  return SizedBox(
-                    height: 50,
-                    width: double.infinity,
-                    child: ElevatedButton(
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: enabled ? const Color(0xFF2563EB) : Colors.white10,
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                        elevation: 0,
-                      ),
-                      onPressed: enabled
-                          ? () {
-                              final pick = times[_selectedIndex!];
-                              Navigator.pushNamed(
-                                context,
-                                AppRoutes.seats,
-                                arguments: {
-                                  'movieId': movie!.id,
-                                  'time': pick.time,
-                                  'cinema': pick.cinema,
-                                },
-                              );
-                            }
-                          : null,
-                      child: Text(
-                        movie == null
-                            ? 'Buy Tickets'
-                            : 'Buy Tickets  \u2022  ${toRupiah(movie.price)}',
-                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                  );
-                },
+                : null,
+          ),
+        );
+      },
+    );
+  }
+}
+
+// ============================================================================
+// HERO BANNER
+// ============================================================================
+
+class _HeroBanner extends StatelessWidget {
+  final Movie movie;
+  final double height;
+  final double scrollOffset;
+
+  const _HeroBanner({
+    required this.movie,
+    required this.height,
+    required this.scrollOffset,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final double parallax = scrollOffset * 0.4;
+    final double opacity = (1 - (scrollOffset / 300)).clamp(0.0, 1.0);
+
+    return SizedBox(
+      height: height,
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          // Background poster with parallax
+          Transform.translate(
+            offset: Offset(0, parallax),
+            child: uiw.UniversalImage(
+              path: movie.poster,
+              fit: BoxFit.cover,
+            ),
+          ),
+
+          // Gradient overlays
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                stops: const [0.0, 0.4, 0.7, 1.0],
+                colors: [
+                  Colors.black.withValues(alpha: 0.3),
+                  Colors.transparent,
+                  app_colors.bg.withValues(alpha: 0.8),
+                  app_colors.bg,
+                ],
               ),
             ),
-          );
-        },
+          ),
+
+          // Movie info at bottom
+          Positioned(
+            left: 20,
+            right: 20,
+            bottom: 20,
+            child: Opacity(
+              opacity: opacity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title
+                  ShaderMask(
+                    shaderCallback: (bounds) => LinearGradient(
+                      colors: [app_colors.textPrimary, app_colors.primary],
+                    ).createShader(bounds),
+                    child: Text(
+                      movie.title.toUpperCase(),
+                      style: const TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                        letterSpacing: 1.2,
+                        height: 1.1,
+                      ),
+                    ),
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // Meta tags
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _MetaTag(
+                        icon: Icons.star_rounded,
+                        label: '8.5',
+                        isHighlight: true,
+                      ),
+                      _MetaTag(
+                        icon: Icons.access_time_rounded,
+                        label: '${movie.durationMin} min',
+                      ),
+                      _MetaTag(
+                        label: movie.genre.split(',').first.trim(),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
+// ============================================================================
+// MOVIE CONTENT
+// ============================================================================
+
+class _MovieContent extends StatelessWidget {
+  final Movie movie;
+  final List<Schedule> times;
+  final int? selectedIndex;
+  final ValueChanged<int> onTimeSelected;
+
+  const _MovieContent({
+    required this.movie,
+    required this.times,
+    required this.selectedIndex,
+    required this.onTimeSelected,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Synopsis
+          _GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Sinopsis',
+                  style: TextStyle(
+                    color: app_colors.primary,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  movie.synopsis.isNotEmpty
+                      ? movie.synopsis
+                      : 'Deskripsi film belum tersedia. Silakan periksa kembali nanti untuk informasi lebih lanjut tentang film ini.',
+                  style: TextStyle(
+                    color: app_colors.textSecondary,
+                    fontSize: 14,
+                    height: 1.6,
+                  ),
+                  maxLines: 4,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 16),
+
+          // Showtimes
+          _GlassCard(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    Icon(
+                      Icons.calendar_today_rounded,
+                      color: app_colors.primary,
+                      size: 18,
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Pilih Jadwal',
+                      style: TextStyle(
+                        color: app_colors.primary,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w700,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                if (times.isEmpty)
+                  Container(
+                    padding: const EdgeInsets.all(16),
+                    decoration: BoxDecoration(
+                      color: app_colors.surface,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          Icons.info_outline_rounded,
+                          color: app_colors.textTertiary,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Tidak ada jadwal tersedia',
+                          style: TextStyle(color: app_colors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 10,
+                    runSpacing: 10,
+                    children: [
+                      for (int i = 0; i < times.length; i++)
+                        _TimeChip(
+                          time: formatShowTime(times[i].time),
+                          cinema: times[i].cinema,
+                          isSelected: selectedIndex == i,
+                          onTap: () => onTimeSelected(i),
+                        ),
+                    ],
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ============================================================================
+// REUSABLE COMPONENTS
+// ============================================================================
+
+class _GlassCard extends StatelessWidget {
+  final Widget child;
+
+  const _GlassCard({required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(16),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: app_colors.glassWhite,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: app_colors.glassBorder),
+          ),
+          child: child,
+        ),
+      ),
+    );
+  }
+}
+
+class _GlassIconButton extends StatelessWidget {
+  final IconData icon;
+  final VoidCallback onTap;
+
+  const _GlassIconButton({required this.icon, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(12),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: app_colors.glassWhite,
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: app_colors.glassBorder),
+            ),
+            child: Icon(icon, color: app_colors.textPrimary, size: 20),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _MetaTag extends StatelessWidget {
+  final String label;
+  final IconData? icon;
+  final bool isHighlight;
+
+  const _MetaTag({
+    required this.label,
+    this.icon,
+    this.isHighlight = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: isHighlight
+            ? app_colors.primary.withValues(alpha: 0.2)
+            : app_colors.glassWhite,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color: isHighlight ? app_colors.primary : app_colors.glassBorder,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          if (icon != null) ...[
+            Icon(
+              icon,
+              size: 14,
+              color: isHighlight ? app_colors.primary : app_colors.textSecondary,
+            ),
+            const SizedBox(width: 4),
+          ],
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: isHighlight ? app_colors.primary : app_colors.textSecondary,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TimeChip extends StatelessWidget {
+  final String time;
+  final String cinema;
+  final bool isSelected;
+  final VoidCallback onTap;
+
+  const _TimeChip({
+    required this.time,
+    required this.cinema,
+    required this.isSelected,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          gradient: isSelected
+              ? LinearGradient(
+                  colors: [app_colors.primary, app_colors.primaryDark],
+                )
+              : null,
+          color: isSelected ? null : app_colors.surface,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: isSelected ? app_colors.primary : app_colors.glassBorder,
+            width: isSelected ? 2 : 1,
+          ),
+          boxShadow: isSelected
+              ? [
+                  BoxShadow(
+                    color: app_colors.primary.withValues(alpha: 0.3),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              time,
+              style: TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+                color: isSelected ? Colors.white : app_colors.textPrimary,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text(
+              cinema,
+              style: TextStyle(
+                fontSize: 11,
+                color: isSelected
+                    ? Colors.white.withValues(alpha: 0.8)
+                    : app_colors.textTertiary,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PremiumButton extends StatefulWidget {
+  final String label;
+  final bool enabled;
+  final VoidCallback? onTap;
+
+  const _PremiumButton({
+    required this.label,
+    required this.enabled,
+    this.onTap,
+  });
+
+  @override
+  State<_PremiumButton> createState() => _PremiumButtonState();
+}
+
+class _PremiumButtonState extends State<_PremiumButton> {
+  bool _isPressed = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTapDown: (_) => setState(() => _isPressed = true),
+      onTapUp: (_) {
+        setState(() => _isPressed = false);
+        widget.onTap?.call();
+      },
+      onTapCancel: () => setState(() => _isPressed = false),
+      child: Transform.scale(
+        scale: _isPressed ? 0.98 : 1.0,
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 150),
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: widget.enabled
+                ? LinearGradient(
+                    colors: [app_colors.primary, app_colors.primaryDark],
+                  )
+                : null,
+            color: widget.enabled ? null : app_colors.surface,
+            borderRadius: BorderRadius.circular(16),
+            boxShadow: widget.enabled
+                ? [
+                    BoxShadow(
+                      color: app_colors.primary.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      offset: const Offset(0, 8),
+                    ),
+                  ]
+                : null,
+          ),
+          child: Center(
+            child: Text(
+              widget.label,
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: widget.enabled ? Colors.white : app_colors.textTertiary,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
