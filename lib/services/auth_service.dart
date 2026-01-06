@@ -33,7 +33,7 @@ static GoogleSignIn _googleInstance() {
       }
 
       final response = await ApiClient.dio.post(
-        '${AppEnv.apiBaseUrl}/auth/google',
+        '${AppEnv.apiBaseUrl}/api/auth/google',
         data: {'idToken': idToken},
       );
       final data = response.data;

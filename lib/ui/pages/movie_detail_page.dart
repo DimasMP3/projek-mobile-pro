@@ -256,6 +256,7 @@ class _MovieDetailPageState extends State<MovieDetailPage>
                       AppRoutes.seats,
                       arguments: {
                         'movieId': movie!.id,
+                        'showtimeId': pick.id,
                         'time': pick.time,
                         'cinema': pick.cinema,
                       },
@@ -506,12 +507,11 @@ class _MovieContent extends StatelessWidget {
 }
 
 // ============================================================================
-// REUSABLE COMPONENTS
+// WIDGETS
 // ============================================================================
 
 class _GlassCard extends StatelessWidget {
   final Widget child;
-
   const _GlassCard({required this.child});
 
   @override
@@ -564,20 +564,20 @@ class _GlassIconButton extends StatelessWidget {
 }
 
 class _MetaTag extends StatelessWidget {
-  final String label;
   final IconData? icon;
+  final String label;
   final bool isHighlight;
 
   const _MetaTag({
-    required this.label,
     this.icon,
+    required this.label,
     this.isHighlight = false,
   });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
         color: isHighlight
             ? app_colors.primary.withValues(alpha: 0.2)
@@ -601,9 +601,9 @@ class _MetaTag extends StatelessWidget {
           Text(
             label,
             style: TextStyle(
+              color: isHighlight ? app_colors.primary : app_colors.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w600,
-              color: isHighlight ? app_colors.primary : app_colors.textSecondary,
             ),
           ),
         ],
@@ -633,26 +633,14 @@ class _TimeChip extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
-          gradient: isSelected
-              ? LinearGradient(
-                  colors: [app_colors.primary, app_colors.primaryDark],
-                )
-              : null,
-          color: isSelected ? null : app_colors.surface,
+          color: isSelected
+              ? app_colors.primary.withValues(alpha: 0.2)
+              : app_colors.surface,
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color: isSelected ? app_colors.primary : app_colors.glassBorder,
             width: isSelected ? 2 : 1,
           ),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: app_colors.primary.withValues(alpha: 0.3),
-                    blurRadius: 12,
-                    offset: const Offset(0, 4),
-                  ),
-                ]
-              : null,
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -660,19 +648,17 @@ class _TimeChip extends StatelessWidget {
             Text(
               time,
               style: TextStyle(
-                fontSize: 14,
+                color: isSelected ? app_colors.primary : app_colors.textPrimary,
                 fontWeight: FontWeight.w700,
-                color: isSelected ? Colors.white : app_colors.textPrimary,
+                fontSize: 13,
               ),
             ),
             const SizedBox(height: 2),
             Text(
               cinema,
               style: TextStyle(
+                color: app_colors.textTertiary,
                 fontSize: 11,
-                color: isSelected
-                    ? Colors.white.withValues(alpha: 0.8)
-                    : app_colors.textTertiary,
               ),
             ),
           ],
@@ -682,7 +668,7 @@ class _TimeChip extends StatelessWidget {
   }
 }
 
-class _PremiumButton extends StatefulWidget {
+class _PremiumButton extends StatelessWidget {
   final String label;
   final bool enabled;
   final VoidCallback? onTap;
@@ -694,55 +680,48 @@ class _PremiumButton extends StatefulWidget {
   });
 
   @override
-  State<_PremiumButton> createState() => _PremiumButtonState();
-}
-
-class _PremiumButtonState extends State<_PremiumButton> {
-  bool _isPressed = false;
-
-  @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: (_) => setState(() => _isPressed = true),
-      onTapUp: (_) {
-        setState(() => _isPressed = false);
-        widget.onTap?.call();
-      },
-      onTapCancel: () => setState(() => _isPressed = false),
-      child: Transform.scale(
-        scale: _isPressed ? 0.98 : 1.0,
-        child: AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          height: 56,
-          decoration: BoxDecoration(
-            gradient: widget.enabled
-                ? LinearGradient(
-                    colors: [app_colors.primary, app_colors.primaryDark],
-                  )
-                : null,
-            color: widget.enabled ? null : app_colors.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: widget.enabled
-                ? [
-                    BoxShadow(
-                      color: app_colors.primary.withValues(alpha: 0.4),
-                      blurRadius: 20,
-                      offset: const Offset(0, 8),
-                    ),
-                  ]
-                : null,
-          ),
-          child: Center(
-            child: Text(
-              widget.label,
+      onTap: enabled ? onTap : null,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 16),
+        decoration: BoxDecoration(
+          gradient: enabled
+              ? LinearGradient(
+                  colors: [app_colors.primary, app_colors.primaryDark],
+                )
+              : null,
+          color: enabled ? null : app_colors.surface,
+          borderRadius: BorderRadius.circular(14),
+          boxShadow: enabled
+              ? [
+                  BoxShadow(
+                    color: app_colors.primary.withValues(alpha: 0.4),
+                    blurRadius: 16,
+                    offset: const Offset(0, 6),
+                  ),
+                ]
+              : null,
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              Icons.lock_rounded,
+              color: enabled ? Colors.white : app_colors.textTertiary,
+              size: 18,
+            ),
+            const SizedBox(width: 8),
+            Text(
+              label,
               style: TextStyle(
-                fontSize: 16,
+                color: enabled ? Colors.white : app_colors.textTertiary,
                 fontWeight: FontWeight.w700,
-                color: widget.enabled ? Colors.white : app_colors.textTertiary,
-                letterSpacing: 0.5,
+                fontSize: 15,
               ),
             ),
-          ),
+          ],
         ),
       ),
     );

@@ -64,6 +64,7 @@ class AppRoutes {
           return _fade(
             SeatSelectionPage(
               movieId: args['movieId'] as String,
+              showtimeId: args['showtimeId'] as int?,
               time: args['time'] as DateTime?,
               cinema: args['cinema'] as String?,
             ),
@@ -72,11 +73,11 @@ class AppRoutes {
           return _fade(SeatSelectionPage(movieId: args as String));
         }
       case payment:
-        return _fade(const PaymentPage());
+        return _fade(const PaymentPage(), settings: s);
       case paymentWebview:
-        return _fade(const PaymentWebViewPage());
+        return _fade(const PaymentWebViewPage(), settings: s);
       case paymentSuccess:
-        return _fade(const PaymentSuccessPage());
+        return _fade(const PaymentSuccessPage(), settings: s);
       case ticket:
         return _fade(const TicketPage());
       case nowShowing:
@@ -94,7 +95,8 @@ class AppRoutes {
     }
   }
 
-  static PageRouteBuilder _fade(Widget page) => PageRouteBuilder(
+  static PageRouteBuilder _fade(Widget page, {RouteSettings? settings}) => PageRouteBuilder(
+    settings: settings,
     pageBuilder: (_, __, ___) => page,
     transitionsBuilder: (_, a, __, c) => FadeTransition(opacity: a, child: c),
     transitionDuration: const Duration(milliseconds: 250),

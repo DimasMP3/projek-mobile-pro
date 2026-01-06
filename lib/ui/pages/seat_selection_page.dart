@@ -9,11 +9,13 @@ import '../../config/app_routes.dart';
 
 class SeatSelectionPage extends StatefulWidget {
   final String movieId;
+  final int? showtimeId;
   final DateTime? time;
   final String? cinema;
   const SeatSelectionPage({
     super.key,
     required this.movieId,
+    this.showtimeId,
     this.time,
     this.cinema,
   });
@@ -324,6 +326,7 @@ class _SeatSelectionPageState extends State<SeatSelectionPage>
                               AppRoutes.payment,
                               arguments: {
                                 'movieId': widget.movieId,
+                                'showtimeId': widget.showtimeId,
                                 'time': widget.time,
                                 'cinema': widget.cinema,
                                 'seats': selected.toList(),

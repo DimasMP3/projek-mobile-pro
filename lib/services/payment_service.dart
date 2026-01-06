@@ -28,6 +28,7 @@ class PaymentService {
     required String customerName,
     required String customerEmail,
     String? customerPhone,
+    List<String>? enabledPayments,
   }) async {
     try {
       final response = await _dio.post('/api/payments/create', data: {
@@ -40,12 +41,17 @@ class PaymentService {
         'customerName': customerName,
         'customerEmail': customerEmail,
         'customerPhone': customerPhone,
+        if (enabledPayments != null) 'enabledPayments': enabledPayments,
       });
 
-      return PaymentResponse.fromJson(response.data);
+      // Backend wraps response in { data: {...} }
+      final responseData = response.data is Map
+          ? (response.data['data'] ?? response.data)
+          : response.data;
+      return PaymentResponse.fromJson(responseData);
     } on DioException catch (e) {
       throw PaymentException(
-        message: e.response?.data?['message'] ?? 'Failed to create payment',
+        message: e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'Failed to create payment',
         statusCode: e.response?.statusCode,
       );
     }
@@ -77,6 +83,28 @@ class PaymentService {
       } catch (e) {
         // Continue polling even on error
       }
+    }
+  }
+
+  /// Get ticket history for a customer
+  Future<List<dynamic>> getTicketHistory(String email) async {
+    try {
+      final response = await _dio.get('/api/payments/history', queryParameters: {
+        'email': email,
+      });
+
+      // Backend wraps response in { data: { tickets: [...] } }
+      final responseData = response.data is Map
+          ? (response.data['data'] ?? response.data)
+          : response.data;
+      
+      final tickets = responseData['tickets'] as List<dynamic>? ?? [];
+      return tickets.map((t) => t as Map<String, dynamic>).toList();
+    } on DioException catch (e) {
+      throw PaymentException(
+        message: e.response?.data?['message'] ?? e.response?.data?['error'] ?? 'Failed to fetch ticket history',
+        statusCode: e.response?.statusCode,
+      );
     }
   }
 }
