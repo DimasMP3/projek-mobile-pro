@@ -11,6 +11,8 @@ import '../ui/pages/home_page.dart';
 import '../ui/pages/movie_detail_page.dart';
 import '../ui/pages/seat_selection_page.dart';
 import '../ui/pages/payment_page.dart';
+import '../ui/pages/payment_webview_page.dart';
+import '../ui/pages/payment_success_page.dart';
 import '../ui/pages/ticket_page.dart';
 import '../ui/pages/now_showing_page.dart';
 import '../ui/pages/search_page.dart';
@@ -29,6 +31,8 @@ class AppRoutes {
   static const detail = '/detail';
   static const seats = '/seats';
   static const payment = '/payment';
+  static const paymentWebview = '/payment-webview';
+  static const paymentSuccess = '/payment-success';
   static const ticket = '/ticket';
   static const nowShowing = '/now-showing';
   static const search = '/search';
@@ -69,6 +73,10 @@ class AppRoutes {
         }
       case payment:
         return _fade(const PaymentPage());
+      case paymentWebview:
+        return _fade(const PaymentWebViewPage());
+      case paymentSuccess:
+        return _fade(const PaymentSuccessPage());
       case ticket:
         return _fade(const TicketPage());
       case nowShowing:
