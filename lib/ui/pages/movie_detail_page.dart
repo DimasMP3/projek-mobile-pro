@@ -290,19 +290,24 @@ class _HeroBanner extends StatelessWidget {
     final double parallax = scrollOffset * 0.4;
     final double opacity = (1 - (scrollOffset / 300)).clamp(0.0, 1.0);
 
-    return SizedBox(
-      height: height,
-      child: Stack(
-        fit: StackFit.expand,
-        children: [
-          // Background poster with parallax
-          Transform.translate(
-            offset: Offset(0, parallax),
-            child: uiw.UniversalImage(
-              path: movie.poster,
-              fit: BoxFit.cover,
+    return ClipRect(
+      child: SizedBox(
+        height: height,
+        child: Stack(
+          fit: StackFit.expand,
+          clipBehavior: Clip.hardEdge,
+          children: [
+            // Background poster with parallax - clipped to bounds
+            Positioned(
+              top: parallax.clamp(-100, 100),
+              left: 0,
+              right: 0,
+              bottom: -100,
+              child: uiw.UniversalImage(
+                path: movie.poster,
+                fit: BoxFit.cover,
+              ),
             ),
-          ),
 
           // Gradient overlays
           Container(
@@ -374,6 +379,7 @@ class _HeroBanner extends StatelessWidget {
             ),
           ),
         ],
+        ),
       ),
     );
   }
